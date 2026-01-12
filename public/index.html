@@ -1,0 +1,1224 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 School Computer Issue System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #2d1b69 50%, #1a0f3a 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-page {
+            background: rgba(255,255,255,0.95);
+            padding: 3rem;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        .login-page h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .login-page p {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #444;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .login-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 150px;
+        }
+        .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .btn-success { background: linear-gradient(45deg, #28a745, #20c997); color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .dashboard {
+            display: none;
+        }
+        .dashboard.active {
+            display: block;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+        .left-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .right-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            background: #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Segoe UI', sans-serif;
+            transition: all 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .issue-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+        .issue-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .issue-id {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-progress { background: #cce5ff; color: #004085; }
+        .status-solved { background: #d4edda; color: #155724; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .hidden { display: none !important; }
+        .quick-access-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .quick-btn {
+            padding: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .quick-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+        }
+        .btn-action {
+            padding: 10px 15px;
+            font-size: 14px;
+            width: auto;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .btn-danger { background: linear-gradient(45deg, #dc3545, #c82333); color: white; }
+        .btn-warning { background: linear-gradient(45deg, #ffc107, #fd7e14); color: white; }
+        .btn-info { background: linear-gradient(45deg, #17a2b8, #138496); color: white; }
+        .btn-secondary { background: linear-gradient(45deg, #6c757d, #5a6268); color: white; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .desc-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .desc-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .desc-box {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        .desc-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .desc-detail-item {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .desc-detail-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .desc-detail-value {
+            color: #333;
+            font-size: 14px;
+        }
+        .solver-notes-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e9ecef;
+        }
+        .solver-notes-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+        .solver-notes-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 1rem; }
+            .header h1 { font-size: 2rem; }
+            .login-page { padding: 2rem; }
+            .login-page h1 { font-size: 2rem; }
+            .desc-details { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginSection" class="login-container">
+        <div class="login-page">
+            <h1>🖥️ School Computer Issue System</h1>
+            <p>Professional IT Issue Management Platform</p>
+            
+            <div class="form-group">
+                <label>👤 Username</label>
+                <select id="username">
+                    <option value="">Select User...</option>
+                    <option value="admin">admin</option>
+                    <option value="Avinash">Avinash</option>
+                    <option value="Ashish">Ashish</option>
+                    <option value="Piyush">Piyush</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>🔐 Password</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+
+            <div class="login-buttons">
+                <button class="btn btn-primary" onclick="login()">🔓 Login</button>
+                <button class="btn btn-success" onclick="guestLogin()">👋 Guest Access</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardSection" class="dashboard">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>🚀 Issue Management System</h1>
+                    <p id="userGreeting"></p>
+                </div>
+                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Left Panel -->
+                <div class="left-panel">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab('quick', this)">⚡ Quick Access</button>
+                        <button class="tab-btn" onclick="switchTab('new', this)">➕ New Issue</button>
+                        <button class="tab-btn" onclick="switchTab('active', this)">🔥 Issues</button>
+                    </div>
+
+                    <!-- Quick Access Tab -->
+                    <div id="quick" class="tab-content active">
+                        <div class="quick-access-grid">
+                            <button class="quick-btn" onclick="startIssue('hardware')">🖥️ Hardware Issue - Piyush Sir</button>
+                            <button class="quick-btn" onclick="startIssue('software')">💻 Software Issue Other Ashish Sir</button>
+                            <button class="quick-btn" onclick="startIssue('normal')">🎛️ Normal IT Issue - Other Avinash Sir</button>
+                        </div>
+                    </div>
+
+                    <!-- New Issue Form -->
+                    <div id="new" class="tab-content">
+                        <h3 id="formTitle">➕ Create New Issue</h3>
+                        <form id="issueForm">
+                            <div class="form-group">
+                                <label>👤 Filed By (Your Name)</label>
+                                <input type="text" id="filedBy" placeholder="Enter your name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>📍 Place of Issue</label>
+                                <input type="text" id="placeOfIssue" placeholder="e.g.,Class name ,Lab name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Issue Description</label>
+                                <textarea id="issueDesc" rows="4" placeholder="Describe the problem in detail..." required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>⏱️ Expected Resolution (Days)</label>
+                                <input type="number" id="expectedDays" min="1" max="30" value="3" required>
+                            </div>
+                            <div class="form-group">
+                                <label>📸 Attach Image or Video (Optional)</label>
+                                <input type="file" id="attachmentFile" accept="image/*,video/*" style="padding: 10px; cursor: pointer;">
+                                <div id="attachmentPreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div style="display: flex; gap: 1rem;">
+                                <button type="submit" class="btn btn-primary">✅ Submit Issue</button>
+                                <button type="button" class="btn btn-warning" onclick="switchTab('quick', event.target)">❌ Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Active Issues -->
+                    <div id="active" class="tab-content">
+                        <div id="issuesList"></div>
+                    </div>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel">
+                    <h3>📊 Dashboard</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalIssues">0</div>
+                            <span>Total Issues</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="solvedIssues">0</div>
+                            <span>Solved</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="pendingIssues">0</div>
+                            <span>Pending</span>
+                        </div>
+                    </div>
+
+                    <div id="reportsSection">
+                        <h4>📈 Reports</h4>
+                        <button class="btn btn-success" id="myReportBtn" onclick="generatePDF()">📋 Generate PDF Report</button>
+                        <button class="btn btn-primary" id="adminReportBtn" onclick="generateAdminPDF()" style="margin-top: 1rem; display: none;">📊 Admin PDF Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description Modal -->
+    <div id="descriptionModal" class="modal">
+        <div class="desc-modal-content">
+            <div class="desc-title">📋 Issue Details</div>
+            <div class="desc-box" id="descriptionText"></div>
+            <div class="desc-details" id="descriptionDetails"></div>
+            
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e9ecef;">
+                <div style="font-weight: bold; color: #667eea; font-size: 16px; margin-bottom: 1rem;">⏳ In Progress Reasons</div>
+                <div class="form-group">
+                    <textarea class="solver-notes-textarea" id="inProgressReasonsModal" placeholder="e.g., Waiting for parts, Pending manager approval, Technical investigation in progress..."></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="saveInProgressReasonsModal()" style="flex: 1;">💾 Save Reasons</button>
+                    <button class="btn btn-secondary" onclick="closeDescriptionModal()" style="flex: 1;">❌ Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div id="transferModal" class="modal">
+        <div class="modal-content">
+            <h3>🔄 Transfer Issue</h3>
+            <p id="transferIssueId"></p>
+            <div class="form-group">
+                <label>Transfer to Technician:</label>
+                <select id="transferTo">
+                    <option value="">Select Technician...</option>
+                    <option value="Avinash">Avinash</option>
+                    <option value="Ashish">Ashish</option>
+                    <option value="Piyush">Piyush</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="confirmTransfer()">✅ Transfer</button>
+                <button class="btn btn-warning" onclick="closeTransferModal()">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>⚙️ GitHub Storage Setup</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 1rem;">Connect directly to your GitHub repository to store data.</p>
+            <div class="form-group">
+                <label>GitHub Username</label>
+                <input type="text" id="ghOwner" placeholder="e.g., yourusername">
+            </div>
+            <div class="form-group">
+                <label>Repository Name</label>
+                <input type="text" id="ghRepo" placeholder="e.g., school-issue-tracker">
+            </div>
+            <div class="form-group">
+                <label>Personal Access Token (PAT)</label>
+                <input type="password" id="ghToken" placeholder="ghp_...">
+                <small style="color: #dc3545;">⚠️ Token must have 'repo' scope permission.</small>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save & Connect</button>
+                <button class="btn btn-warning" onclick="closeSettings()">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        const users = {
+            'admin': 'admin123',
+            'Avinash': 'Avinash123',
+            'Ashish': 'Ashish123',
+            'Piyush': 'Piyush123'
+        };
+
+        const technicians = {
+            'hardware': 'Piyush',
+            'software': 'Ashish',
+            'normal': 'Avinash'
+        };
+
+        // ================= GITHUB STORAGE LOGIC =================
+        // WARNING: Token is exposed in client-side code.
+        const GITHUB_TOKEN = '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'; 
+        const GITHUB_OWNER = 'dhruv021108'; 
+        const GITHUB_REPO = 'school-issue-local-server';
+        
+        let currentSha = null; // Needed to update files on GitHub
+
+        // Placeholder functions for removed UI elements
+        function openSettings() {}
+        function closeSettings() {}
+        function saveSettings() {}
+
+        async function getIssues() {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    cache: "no-store"
+                });
+
+                if (response.status === 404) return []; // File doesn't exist yet
+                if (!response.ok) throw new Error('GitHub API Error');
+
+                const data = await response.json();
+                currentSha = data.sha;
+                // Decode Base64 content from GitHub
+                const content = decodeURIComponent(escape(window.atob(data.content)));
+                return JSON.parse(content);
+            } catch (error) {
+                console.error('Error fetching issues:', error);
+                return [];
+            }
+        }
+
+        async function saveToGithub(issues) {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+            // Encode content to Base64 (handling unicode/emojis correctly)
+            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
+            
+            const body = {
+                message: "Update issues database",
+                content: content
+            };
+            if (currentSha) body.sha = currentSha;
+
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error('GitHub Save Failed: ' + err);
+            }
+            
+            const data = await response.json();
+            currentSha = data.content.sha; // Update SHA for next save
+        }
+
+        async function addIssue(issue) {
+            const issues = await getIssues();
+            issues.push(issue);
+            await saveToGithub(issues);
+        }
+
+        async function updateIssue(updatedIssue) {
+            const issues = await getIssues();
+            const index = issues.findIndex(i => i.id === updatedIssue.id);
+            if (index !== -1) {
+                issues[index] = updatedIssue;
+                await saveToGithub(issues);
+            }
+        }
+
+        async function deleteIssue(id) {
+            let issues = await getIssues();
+            issues = issues.filter(i => i.id !== id);
+            await saveToGithub(issues);
+        }
+
+        async function loadAllIssues() {
+            return await getIssues();
+        }
+
+        let currentUser = null;
+        let currentMode = null;
+        let transferringIssueId = null;
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username) {
+                alert('⚠️ Please select a username!');
+                return;
+            }
+
+            if (users[username] && users[username] === password) {
+                currentUser = username;
+                currentMode = username === 'admin' ? 'admin' : 'tech';
+                showDashboard();
+            } else {
+                alert('❌ Invalid username or password!');
+                document.getElementById('password').value = '';
+            }
+        }
+
+        function guestLogin() {
+            currentUser = 'Guest';
+            currentMode = 'guest';
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').classList.add('active');
+            
+            let greeting = '';
+            if (currentMode === 'guest') {
+                greeting = '👋 Welcome Guest - Register Your Issue';
+                document.getElementById('reportsSection').style.display = 'none';
+            } else if (currentMode === 'admin') {
+                greeting = '👨‍💼 Admin Panel - Full Control';
+                document.getElementById('reportsSection').style.display = 'block';
+                document.getElementById('myReportBtn').style.display = 'block';
+                document.getElementById('adminReportBtn').style.display = 'block';
+            } else {
+                greeting = `👨‍💻 Technician - ${currentUser}`;
+                document.getElementById('reportsSection').style.display = 'block';
+                document.getElementById('myReportBtn').style.display = 'block';
+                document.getElementById('adminReportBtn').style.display = 'none';
+            }
+            
+            document.getElementById('userGreeting').textContent = greeting;
+            updateStats();
+            displayIssues();
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            if (element && element.classList) {
+                element.classList.add('active');
+            }
+        }
+
+        function startIssue(type) {
+            switchTab('new');
+            const tech = technicians[type];
+            document.getElementById('formTitle').textContent = `➕ ${type.toUpperCase()} Issue - Will be Assigned to ${tech}`;
+            document.getElementById('filedBy').focus();
+        }
+
+        document.getElementById('issueForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formTitle = document.getElementById('formTitle').textContent.toLowerCase();
+            let type = 'normal';
+            if (formTitle.includes('hardware')) type = 'hardware';
+            else if (formTitle.includes('software')) type = 'software';
+            
+            const attachmentFile = document.getElementById('attachmentFile').files[0];
+            let attachmentData = null;
+            
+            if (attachmentFile) {
+                attachmentData = {
+                    name: attachmentFile.name,
+                    type: attachmentFile.type,
+                    size: attachmentFile.size
+                };
+            }
+
+            const issue = {
+                id: Date.now(),
+                filedBy: document.getElementById('filedBy').value,
+                placeOfIssue: document.getElementById('placeOfIssue').value,
+                issueDesc: document.getElementById('issueDesc').value,
+                expectedDays: parseInt(document.getElementById('expectedDays').value),
+                assignedTo: currentMode === 'guest' ? technicians[type] : currentUser,
+                status: 'Pending',
+                createdDate: new Date().toLocaleString('en-IN'),
+                updatedDate: new Date().toLocaleString('en-IN'),
+                type: type,
+                attachment: attachmentData,
+                attachmentBase64: null,
+                inProgressReasons: ""
+            };
+
+            if (attachmentFile) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    issue.attachmentBase64 = e.target.result;
+                    try {
+                        await addIssue(issue);
+                        updateStats();
+                        displayIssues();
+                        document.getElementById('issueForm').reset();
+                        document.getElementById('attachmentPreview').innerHTML = '';
+                        switchTab('active');
+                        alert('🎉 Issue created successfully with attachment!');
+                    } catch (error) {
+                        console.error(error);
+                        alert('❌ Failed to submit issue. The attachment might be too large.');
+                    }
+                };
+                reader.readAsDataURL(attachmentFile);
+                return;
+            }
+
+            try {
+                await addIssue(issue);
+                updateStats();
+                displayIssues();
+                this.reset();
+                document.getElementById('attachmentPreview').innerHTML = '';
+                switchTab('active');
+                alert('🎉 Issue created successfully!');
+            } catch (error) {
+                console.error(error);
+                alert('❌ Failed to submit issue.');
+            }
+        });
+
+        document.getElementById('attachmentFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('attachmentPreview');
+            preview.innerHTML = '';
+            
+            if (file) {
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+                
+                if (isImage) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.innerHTML = `<img src="${event.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #667eea;">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (isVideo) {
+                    preview.innerHTML = `<video style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #667eea;" controls><source src="" type="${file.type}"></video><br><span style="font-size: 12px; color: #667eea;">📹 ${file.name}</span>`;
+                }
+            }
+        });
+
+        async function displayIssues() {
+            const list = document.getElementById('issuesList');
+            list.innerHTML = '<p style="text-align: center;">Loading...</p>';
+
+            let allIssues = await loadAllIssues();
+
+            let filteredIssues = allIssues;
+            if (currentMode === 'tech') {
+                filteredIssues = allIssues.filter(i => i.assignedTo === currentUser);
+            }
+
+            list.innerHTML = '';
+
+            if (filteredIssues.length === 0) {
+                list.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;"><h3>📭 No issues</h3></div>';
+                return;
+            }
+
+            filteredIssues.forEach(issue => {
+                const card = document.createElement('div');
+                card.className = 'issue-card';
+                card.innerHTML = `
+                    <div class="issue-header">
+                        <div class="issue-id">#${issue.id.toString().slice(-6)}</div>
+                        <span class="status-badge status-${issue.status.toLowerCase()}">${issue.status}</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📍 ${issue.placeOfIssue}</strong>
+                    </div>
+                    <p><strong>📝 ${issue.issueDesc}</strong></p>
+                    <div style="display: flex; gap: 2rem; font-size: 14px; color: #666; flex-wrap: wrap;">
+                        <span>👤 ${issue.filedBy}</span>
+                        <span>👨‍💼 ${issue.assignedTo}</span>
+                        <span>⏱️ ${issue.expectedDays} days</span>
+                        <span>📅 ${issue.createdDate}</span>
+                    </div>
+                    ${issue.attachment ? `
+                        <div style="margin-top: 1rem; padding: 1rem; background: #e8f4f8; border-radius: 12px; border-left: 4px solid #17a2b8;">
+                            <div style="font-weight: bold; color: #17a2b8; font-size: 13px; margin-bottom: 0.5rem;">📎 Attachment</div>
+                            <div style="font-size: 12px; color: #555; margin-bottom: 0.5rem;">${issue.attachment.name}</div>
+                            ${issue.attachment.type.startsWith('image/') ? `
+                                <img src="${issue.attachmentBase64}" style="max-width: 150px; max-height: 150px; border-radius: 6px;">
+                            ` : `
+                                <video style="max-width: 200px; max-height: 200px; border-radius: 6px;" controls><source src="${issue.attachmentBase64}" type="${issue.attachment.type}"></video>
+                            `}
+                        </div>
+                    ` : ''}
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 12px; border-left: 4px solid #667eea;">
+                        <div style="font-weight: bold; color: #667eea; font-size: 13px; margin-bottom: 0.5rem;">⏳ In Progress Reasons</div>
+                        <textarea class="solver-notes-textarea" id="reasons${issue.id}" style="min-height: 80px; margin-bottom: 0.5rem;" placeholder="e.g., Waiting for parts, Pending approval...">${issue.inProgressReasons || ''}</textarea>
+                        ${(currentMode === 'tech' || currentMode === 'admin') ? `
+                            <button class="btn btn-primary btn-action" style="width: 100%; padding: 8px;" onclick="saveInProgressReasons(${issue.id})">💾 Save Reasons</button>
+                        ` : `
+                            <div style="font-size: 13px; color: #666; font-style: italic;">${issue.inProgressReasons ? issue.inProgressReasons : 'No reasons added yet'}</div>
+                        `}
+                    </div>
+                    ${(currentMode === 'tech' || currentMode === 'admin') ? `
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-action" onclick="viewDescription(${issue.id})">📄 View Description</button>
+                            ${issue.status === 'Pending' ? 
+                                `<button class="btn btn-success btn-action" onclick="updateStatus(${issue.id}, 'In Progress')">🔄 Progress</button>` : ''
+                            }
+                            ${issue.status !== 'Solved' ? 
+                                `<button class="btn btn-primary btn-action" onclick="updateStatus(${issue.id}, 'Solved')">✅ Solve</button>` : 
+                                `<span class="status-badge status-solved">✅ Solved</span>`
+                            }
+                            <input type="number" id="days${issue.id}" min="1" max="30" placeholder="Days" style="width: 70px; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
+                            <button class="btn btn-warning btn-action" onclick="updateDuration(${issue.id})">⏱️ Update</button>
+                            <button class="btn btn-info btn-action" onclick="openTransferModal(${issue.id})">🔄 Transfer</button>
+                            <button class="btn btn-danger btn-action" onclick="deleteIssueFunc(${issue.id})">🗑️ Delete</button>
+                        </div>
+                    ` : ''}
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        async function viewDescription(id) {
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === id);
+            
+            if (issue) {
+                document.getElementById('descriptionText').textContent = issue.issueDesc;
+                document.getElementById('descriptionDetails').innerHTML = `
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Issue ID</div>
+                        <div class="desc-detail-value">#${issue.id.toString().slice(-6)}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Location</div>
+                        <div class="desc-detail-value">${issue.placeOfIssue}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Filed By</div>
+                        <div class="desc-detail-value">${issue.filedBy}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Assigned To</div>
+                        <div class="desc-detail-value">${issue.assignedTo}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Status</div>
+                        <div class="desc-detail-value" style="color: ${issue.status === 'Solved' ? '#28a745' : issue.status === 'In Progress' ? '#007bff' : '#ffc107'}; font-weight: bold;">${issue.status}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Expected Days</div>
+                        <div class="desc-detail-value">${issue.expectedDays} days</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Issue Type</div>
+                        <div class="desc-detail-value">${issue.type.toUpperCase()}</div>
+                    </div>
+                    <div class="desc-detail-item">
+                        <div class="desc-detail-label">Created Date</div>
+                        <div class="desc-detail-value">${issue.createdDate}</div>
+                    </div>
+                `;
+
+                document.getElementById('inProgressReasonsModal').value = issue.inProgressReasons || '';
+                window.currentViewingIssueId = id;
+                document.getElementById('descriptionModal').classList.add('active');
+            }
+        }
+
+        async function saveInProgressReasons(id) {
+            const reasons = document.getElementById(`reasons${id}`).value;
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === id);
+            
+            if (issue) {
+                issue.inProgressReasons = reasons;
+                issue.updatedDate = new Date().toLocaleString('en-IN');
+                await updateIssue(issue);
+                alert('✅ In Progress Reasons saved!');
+                displayIssues();
+            }
+        }
+
+        async function saveInProgressReasonsModal() {
+            const reasons = document.getElementById('inProgressReasonsModal').value;
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === window.currentViewingIssueId);
+            
+            if (issue) {
+                issue.inProgressReasons = reasons;
+                issue.updatedDate = new Date().toLocaleString('en-IN');
+                await updateIssue(issue);
+                alert('✅ In Progress Reasons saved!');
+                closeDescriptionModal();
+                displayIssues();
+            }
+        }
+
+        function closeDescriptionModal() {
+            document.getElementById('descriptionModal').classList.remove('active');
+        }
+
+        async function updateStatus(id, status) {
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === id);
+            if (issue) {
+                issue.status = status;
+                issue.updatedDate = new Date().toLocaleString('en-IN');
+                await updateIssue(issue);
+                updateStats();
+                displayIssues();
+            }
+        }
+
+        async function updateDuration(id) {
+            const input = document.getElementById(`days${id}`);
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === id);
+            if (issue && input.value) {
+                issue.expectedDays = parseInt(input.value);
+                await updateIssue(issue);
+                updateStats();
+                displayIssues();
+                alert('⏱️ Duration updated!');
+            }
+        }
+
+        function openTransferModal(id) {
+            transferringIssueId = id;
+            document.getElementById('transferIssueId').textContent = `Issue #${id.toString().slice(-6)}`;
+            document.getElementById('transferModal').classList.add('active');
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transferModal').classList.remove('active');
+            document.getElementById('transferTo').value = '';
+            transferringIssueId = null;
+        }
+
+        async function confirmTransfer() {
+            const transferTo = document.getElementById('transferTo').value;
+            if (!transferTo) {
+                alert('Please select a technician!');
+                return;
+            }
+
+            const allIssues = await loadAllIssues();
+            const issue = allIssues.find(i => i.id === transferringIssueId);
+            if (issue) {
+                issue.assignedTo = transferTo;
+                issue.updatedDate = new Date().toLocaleString('en-IN');
+                await updateIssue(issue);
+                updateStats();
+                displayIssues();
+                closeTransferModal();
+                alert(`✅ Issue transferred to ${transferTo}`);
+            }
+        }
+
+        async function deleteIssueFunc(id) {
+            if (confirm('🗑️ Delete this issue?')) {
+                await deleteIssue(id);
+                updateStats();
+                displayIssues();
+            }
+        }
+
+        async function updateStats() {
+            const allIssues = await loadAllIssues();
+            let relevantIssues = allIssues;
+            if (currentMode === 'tech') {
+                relevantIssues = allIssues.filter(i => i.assignedTo === currentUser);
+            }
+            
+            const total = relevantIssues.length;
+            const solved = relevantIssues.filter(i => i.status === 'Solved').length;
+            const pending = relevantIssues.filter(i => i.status === 'Pending').length;
+
+            document.getElementById('totalIssues').textContent = total;
+            document.getElementById('solvedIssues').textContent = solved;
+            document.getElementById('pendingIssues').textContent = pending;
+        }
+
+        // PDF Generation functions (same as input)
+        async function generatePDF() {
+            const allIssues = await loadAllIssues();
+            let reportIssues = currentMode === 'admin' ? allIssues : allIssues.filter(i => i.assignedTo === currentUser);
+
+            if (reportIssues.length === 0) {
+                alert('⚠️ No issues to generate report!');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                
+                pdf.setFontSize(18);
+                pdf.text(`📋 Issue Report - ${currentUser}`, 20, 20);
+                pdf.setFontSize(10);
+                pdf.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 30);
+                
+                const tableData = reportIssues.map(issue => [
+                    `#${issue.id.toString().slice(-6)}`,
+                    issue.placeOfIssue,
+                    issue.issueDesc.substring(0, 30),
+                    issue.filedBy,
+                    issue.assignedTo,
+                    issue.status
+                ]);
+
+                pdf.autoTable({
+                    head: [['ID', 'Place', 'Description', 'Filed By', 'Assigned To', 'Status']],
+                    body: tableData,
+                    startY: 40,
+                    theme: 'grid',
+                    headStyles: { fillColor: [102, 126, 234], textColor: [255, 255, 255], fontSize: 10 },
+                    bodyStyles: { fontSize: 9 },
+                    margin: { top: 10 }
+                });
+
+                pdf.setFontSize(12);
+                pdf.text('Summary', 20, pdf.lastAutoTable.finalY + 15);
+                pdf.setFontSize(10);
+                pdf.text(`Total Issues: ${reportIssues.length}`, 20, pdf.lastAutoTable.finalY + 25);
+                pdf.text(`Solved Issues: ${reportIssues.filter(i => i.status === 'Solved').length}`, 20, pdf.lastAutoTable.finalY + 35);
+                pdf.text(`Pending Issues: ${reportIssues.filter(i => i.status === 'Pending').length}`, 20, pdf.lastAutoTable.finalY + 45);
+                
+                pdf.save(`Issue_Report_${currentUser}_${new Date().getTime()}.pdf`);
+                alert('✅ PDF Report Generated Successfully!');
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('❌ Error generating PDF: ' + error.message);
+            }
+        }
+
+        async function generateAdminPDF() {
+            const allIssues = await loadAllIssues();
+
+            if (allIssues.length === 0) {
+                alert('⚠️ No issues to generate report!');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                
+                pdf.setFontSize(18);
+                pdf.text('📊 Admin System Report', 20, 20);
+                pdf.setFontSize(10);
+                pdf.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 30);
+                
+                const tableData = allIssues.map(issue => [
+                    `#${issue.id.toString().slice(-6)}`,
+                    issue.placeOfIssue,
+                    issue.filedBy,
+                    issue.assignedTo,
+                    issue.status
+                ]);
+
+                pdf.autoTable({
+                    head: [['ID', 'Place', 'Filed By', 'Assigned To', 'Status']],
+                    body: tableData,
+                    startY: 40,
+                    theme: 'grid',
+                    headStyles: { fillColor: [102, 126, 234], textColor: [255, 255, 255] },
+                    margin: { top: 10 }
+                });
+
+                pdf.setFontSize(14);
+                pdf.text('Technician Performance', 20, pdf.lastAutoTable.finalY + 15);
+                
+                const perfData = ['Avinash', 'Ashish', 'Piyush'].map(tech => {
+                    const techIssues = allIssues.filter(i => i.assignedTo === tech);
+                    const solved = techIssues.filter(i => i.status === 'Solved').length;
+                    const rate = techIssues.length > 0 ? Math.round((solved / techIssues.length) * 100) : 0;
+                    return [tech, techIssues.length.toString(), solved.toString(), (techIssues.length - solved).toString(), `${rate}%`];
+                });
+
+                pdf.autoTable({
+                    head: [['Technician', 'Total', 'Solved', 'Pending', 'Success %']],
+                    body: perfData,
+                    startY: pdf.lastAutoTable.finalY + 20,
+                    theme: 'grid',
+                    headStyles: { fillColor: [118, 75, 162], textColor: [255, 255, 255] }
+                });
+
+                pdf.setFontSize(14);
+                pdf.text('Overall Statistics', 20, pdf.lastAutoTable.finalY + 15);
+                pdf.setFontSize(11);
+                let statY = pdf.lastAutoTable.finalY + 25;
+                pdf.text(`Total Issues: ${allIssues.length}`, 20, statY);
+                pdf.text(`Solved Issues: ${allIssues.filter(i => i.status === 'Solved').length}`, 20, statY + 8);
+                pdf.text(`In Progress: ${allIssues.filter(i => i.status === 'In Progress').length}`, 20, statY + 16);
+                pdf.text(`Pending Issues: ${allIssues.filter(i => i.status === 'Pending').length}`, 20, statY + 24);
+                pdf.text(`Success Rate: ${allIssues.length > 0 ? Math.round((allIssues.filter(i => i.status === 'Solved').length / allIssues.length) * 100) : 0}%`, 20, statY + 32);
+                
+                pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
+                alert('✅ PDF Report Generated Successfully!');
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('❌ Error generating PDF: ' + error.message);
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+    </script>
+
+</body>
+</html>
