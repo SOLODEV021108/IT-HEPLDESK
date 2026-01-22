@@ -726,27 +726,63 @@
             document.getElementById('settingsModal').classList.remove('active');
         }
 
-        function saveSettings() {
+        async function saveSettings() {
             const owner = document.getElementById('ghOwner').value.trim();
             const repo = document.getElementById('ghRepo').value.trim();
             const token = document.getElementById('ghToken').value.trim();
 
             if (!owner || !repo || !token) {
-                alert('⚠️ Please fill in all fields');
+                alert('⚠️ Please fill in all fields!');
                 return;
             }
 
-            localStorage.setItem('gh_owner', owner);
-            localStorage.setItem('gh_repo', repo);
-            localStorage.setItem('gh_token', token);
+            // Validate token format
+            if (!token.startsWith('github_pat_') && !token.startsWith('ghp_')) {
+                alert('⚠️ Invalid token format! Use a GitHub Personal Access Token.');
+                return;
+            }
 
-            GITHUB_OWNER = owner;
-            GITHUB_REPO = repo;
-            GITHUB_TOKEN = token;
+            // Test GitHub connection
+            try {
+                const testUrl = `https://api.github.com/repos/${owner}/${repo}/contents/issues.json`;
+                const response = await fetch(testUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
 
-            closeSettings();
-            alert('✅ Settings saved successfully!');
-            displayIssues();
+                if (response.status === 401) {
+                    alert('❌ Invalid token! Check your GitHub Personal Access Token.');
+                    return;
+                }
+
+                if (response.status === 404) {
+                    const createResp = confirm('⚠️ Repository or issues.json not found.\n\nCreate issues.json in your repo now?\n\nClick OK to proceed (system will create it on first issue submission).');
+                    if (!createResp) return;
+                }
+
+                if (response.status !== 200 && response.status !== 404) {
+                    alert('❌ Failed to connect to GitHub. Check your credentials.');
+                    return;
+                }
+
+                // Save credentials to localStorage
+                localStorage.setItem('gh_owner', owner);
+                localStorage.setItem('gh_repo', repo);
+                localStorage.setItem('gh_token', token);
+
+                // Update global variables
+                GITHUB_OWNER = owner;
+                GITHUB_REPO = repo;
+                GITHUB_TOKEN = token;
+
+                closeSettings();
+                alert('✅ GitHub credentials saved successfully!');
+                displayIssues();
+            } catch (error) {
+                alert('❌ Error testing connection: ' + error.message);
+            }
         }
 
         // ================= AUTHENTICATION =================
