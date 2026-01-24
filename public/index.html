@@ -1,7 +1,5 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,6 +35,7 @@
         .login-page h1 {
             font-size: 2.5rem;
             background: linear-gradient(45deg, #667eea, #764ba2);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -427,7 +426,7 @@
                     <p id="userGreeting"></p>
                 </div>
                 <div style="display: flex; gap: 1rem;">
-                    <button class="logout-btn" onclick="openSettings()">⚙️ Settings</button>
+                    <button id="settingsBtn" class="logout-btn" onclick="openSettings()">⚙️ Settings</button>
                     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
                 </div>
             </div>
@@ -586,84 +585,123 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script>
-        const users = {
+        // ================= CONFIGURATION =================
+        const USERS = {
             'admin': 'admin123',
             'Avinash': 'Avinash123',
             'Ashish': 'Ashish123',
             'Piyush': 'Piyush123'
         };
 
-        const technicians = {
+        const TECHNICIANS = {
             'hardware': 'Piyush',
             'software': 'Ashish',
             'normal': 'Avinash'
         };
 
-        // ================= GITHUB STORAGE LOGIC =================
-        // WARNING: Token is exposed in client-side code.
-        const GITHUB_TOKEN = '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'; 
-        const GITHUB_OWNER = 'dhruv021108'; 
-        const GITHUB_REPO = 'school-issue-local-server';
-        
-        let currentSha = null; // Needed to update files on GitHub
+        // ================= STATE MANAGEMENT =================
+        let currentUser = null;
+        let currentMode = null;
+        let currentSha = null;
+        let transferringIssueId = null;
 
-        // Placeholder functions for removed UI elements
-        function openSettings() {}
-        function closeSettings() {}
-        function saveSettings() {}
+        // GitHub Configuration (from localStorage)
+        let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
+        let GITHUB_OWNER = localStorage.getItem('gh_owner') || '';
+        let GITHUB_REPO = localStorage.getItem('gh_repo') || '';
 
+        // ================= GITHUB API FUNCTIONS =================
         async function getIssues() {
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+            // Use hardcoded owner/repo for public reading
+            const owner = 'SOLODEV021108';
+            const repo = 'IT-HEPLDESK';
+            const branch = 'main';
+
+            // Try public raw URL first (no auth needed)
+            const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/issues.json`;
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
+                const response = await fetch(rawUrl, {
                     cache: "no-store"
                 });
 
-                if (response.status === 404) return []; // File doesn't exist yet
-                if (!response.ok) throw new Error('GitHub API Error');
+                if (response.status === 404) {
+                    console.log('issues.json does not exist yet');
+                    return [];
+                }
+                
+                if (!response.ok) {
+                    console.error('GitHub URL Error:', response.status);
+                    return [];
+                }
 
-                const data = await response.json();
-                currentSha = data.sha;
-                // Decode Base64 content from GitHub
-                const content = decodeURIComponent(escape(window.atob(data.content)));
-                return JSON.parse(content);
+                const content = await response.json();
+                return content;
             } catch (error) {
-                console.error('Error fetching issues:', error);
+                console.error('Error fetching issues from public URL:', error);
                 return [];
             }
         }
 
         async function saveToGithub(issues) {
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
-            // Encode content to Base64 (handling unicode/emojis correctly)
-            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
+            // Use hardcoded values and token from localStorage
+            const owner = 'SOLODEV021108';
+            const repo = 'IT-HEPLDESK';
+            const token = localStorage.getItem('gh_token');
             
+            if (!token) {
+                throw new Error('GitHub token not configured. Admin must set it in settings.');
+            }
+
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/issues.json`;
+            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
+
+            // Get current SHA for updating
+            let sha = null;
+            try {
+                const getResponse = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    sha = data.sha;
+                }
+            } catch (e) {
+                console.log('File does not exist yet, will create new');
+            }
+
             const body = {
-                message: "Update issues database",
+                message: `Updated issues - ${new Date().toLocaleString('en-IN')}`,
                 content: content
             };
-            if (currentSha) body.sha = currentSha;
 
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (!response.ok) {
-                const err = await response.text();
-                throw new Error('GitHub Save Failed: ' + err);
+            if (sha) {
+                body.sha = sha;
             }
-            
-            const data = await response.json();
-            currentSha = data.content.sha; // Update SHA for next save
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('GitHub Save Error:', error);
+                    throw new Error(error.message || 'Failed to save to GitHub');
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error saving to GitHub:', error);
+                throw error;
+            }
         }
 
         async function addIssue(issue) {
@@ -691,25 +729,93 @@
             return await getIssues();
         }
 
-        let currentUser = null;
-        let currentMode = null;
-        let transferringIssueId = null;
+        // ================= SETTINGS FUNCTIONS =================
+        function openSettings() {
+            document.getElementById('ghOwner').value = GITHUB_OWNER;
+            document.getElementById('ghRepo').value = GITHUB_REPO;
+            document.getElementById('ghToken').value = GITHUB_TOKEN;
+            document.getElementById('settingsModal').classList.add('active');
+        }
 
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        async function saveSettings() {
+            const owner = document.getElementById('ghOwner').value.trim();
+            const repo = document.getElementById('ghRepo').value.trim();
+            const token = document.getElementById('ghToken').value.trim();
+
+            if (!owner || !repo || !token) {
+                alert('⚠️ Please fill in all fields!');
+                return;
+            }
+
+            // Validate token format
+            if (!token.startsWith('github_pat_') && !token.startsWith('ghp_')) {
+                alert('⚠️ Invalid token format! Use a GitHub Personal Access Token.');
+                return;
+            }
+
+            // Test GitHub connection
+            try {
+                const testUrl = `https://api.github.com/repos/${owner}/${repo}/contents/issues.json`;
+                const response = await fetch(testUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert('❌ Invalid token! Check your GitHub Personal Access Token.');
+                    return;
+                }
+
+                if (response.status === 404) {
+                    const createResp = confirm('⚠️ Repository or issues.json not found.\n\nCreate issues.json in your repo now?\n\nClick OK to proceed (system will create it on first issue submission).');
+                    if (!createResp) return;
+                }
+
+                if (response.status !== 200 && response.status !== 404) {
+                    alert('❌ Failed to connect to GitHub. Check your credentials.');
+                    return;
+                }
+
+                // Save credentials to localStorage
+                localStorage.setItem('gh_owner', owner);
+                localStorage.setItem('gh_repo', repo);
+                localStorage.setItem('gh_token', token);
+
+                // Update global variables
+                GITHUB_OWNER = owner;
+                GITHUB_REPO = repo;
+                GITHUB_TOKEN = token;
+
+                closeSettings();
+                alert('✅ GitHub credentials saved successfully!');
+                displayIssues();
+            } catch (error) {
+                alert('❌ Error testing connection: ' + error.message);
+            }
+        }
+
+        // ================= AUTHENTICATION =================
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
             if (!username) {
-                alert('⚠️ Please select a username!');
+                alert('⚠️ Please select a username');
                 return;
             }
 
-            if (users[username] && users[username] === password) {
+            if (USERS[username] && USERS[username] === password) {
                 currentUser = username;
                 currentMode = username === 'admin' ? 'admin' : 'tech';
                 showDashboard();
             } else {
-                alert('❌ Invalid username or password!');
+                alert('❌ Invalid credentials');
                 document.getElementById('password').value = '';
             }
         }
@@ -720,39 +826,52 @@
             showDashboard();
         }
 
+        function logout() {
+            location.reload();
+        }
+
+        // ================= DASHBOARD =================
         function showDashboard() {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').classList.add('active');
-            
+
             let greeting = '';
             if (currentMode === 'guest') {
-                greeting = '👋 Welcome Guest - Register Your Issue';
+                greeting = '👋 Welcome Guest - Submit Your Issue';
                 document.getElementById('reportsSection').style.display = 'none';
+                document.getElementById('settingsBtn').style.display = 'none';
             } else if (currentMode === 'admin') {
                 greeting = '👨‍💼 Admin Panel - Full Control';
                 document.getElementById('reportsSection').style.display = 'block';
                 document.getElementById('myReportBtn').style.display = 'block';
                 document.getElementById('adminReportBtn').style.display = 'block';
+                document.getElementById('settingsBtn').style.display = 'inline-block';
+                
+                // Force GitHub setup on first use
+                if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+                    setTimeout(() => {
+                        alert('⚠️ IMPORTANT: GitHub is not configured!\n\nThe admin must configure GitHub credentials first so all users can see the same issues from any device.\n\nClick Settings to configure.');
+                        openSettings();
+                    }, 500);
+                }
             } else {
                 greeting = `👨‍💻 Technician - ${currentUser}`;
                 document.getElementById('reportsSection').style.display = 'block';
                 document.getElementById('myReportBtn').style.display = 'block';
                 document.getElementById('adminReportBtn').style.display = 'none';
+                document.getElementById('settingsBtn').style.display = 'none';
             }
-            
+
             document.getElementById('userGreeting').textContent = greeting;
             updateStats();
             displayIssues();
         }
 
-        function logout() {
-            location.reload();
-        }
-
+        // ================= TAB MANAGEMENT =================
         function switchTab(tabName, element) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
+
             document.getElementById(tabName).classList.add('active');
             if (element && element.classList) {
                 element.classList.add('active');
@@ -761,22 +880,29 @@
 
         function startIssue(type) {
             switchTab('new');
-            const tech = technicians[type];
+            const tech = TECHNICIANS[type];
             document.getElementById('formTitle').textContent = `➕ ${type.toUpperCase()} Issue - Will be Assigned to ${tech}`;
             document.getElementById('filedBy').focus();
         }
 
+        // ================= FORM SUBMISSION =================
         document.getElementById('issueForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
+            const token = localStorage.getItem('gh_token');
+            if (!token) {
+                alert('⚠️ GitHub token not configured!\n\nPlease ask the admin to:\n1. Click ⚙️ Settings\n2. Enter GitHub Personal Access Token\n3. Click Save & Connect');
+                return;
+            }
+
             const formTitle = document.getElementById('formTitle').textContent.toLowerCase();
             let type = 'normal';
             if (formTitle.includes('hardware')) type = 'hardware';
             else if (formTitle.includes('software')) type = 'software';
-            
+
             const attachmentFile = document.getElementById('attachmentFile').files[0];
             let attachmentData = null;
-            
+
             if (attachmentFile) {
                 attachmentData = {
                     name: attachmentFile.name,
@@ -791,7 +917,7 @@
                 placeOfIssue: document.getElementById('placeOfIssue').value,
                 issueDesc: document.getElementById('issueDesc').value,
                 expectedDays: parseInt(document.getElementById('expectedDays').value),
-                assignedTo: currentMode === 'guest' ? technicians[type] : currentUser,
+                assignedTo: currentMode === 'guest' ? TECHNICIANS[type] : currentUser,
                 status: 'Pending',
                 createdDate: new Date().toLocaleString('en-IN'),
                 updatedDate: new Date().toLocaleString('en-IN'),
@@ -812,10 +938,10 @@
                         document.getElementById('issueForm').reset();
                         document.getElementById('attachmentPreview').innerHTML = '';
                         switchTab('active');
-                        alert('🎉 Issue created successfully with attachment!');
+                        alert('🎉 Issue submitted successfully!');
                     } catch (error) {
                         console.error(error);
-                        alert('❌ Failed to submit issue. The attachment might be too large.');
+                        alert('❌ Failed to submit issue: ' + error.message);
                     }
                 };
                 reader.readAsDataURL(attachmentFile);
@@ -829,10 +955,10 @@
                 this.reset();
                 document.getElementById('attachmentPreview').innerHTML = '';
                 switchTab('active');
-                alert('🎉 Issue created successfully!');
+                alert('🎉 Issue submitted successfully!');
             } catch (error) {
                 console.error(error);
-                alert('❌ Failed to submit issue.');
+                alert('❌ Failed to submit issue: ' + error.message);
             }
         });
 
@@ -840,11 +966,11 @@
             const file = e.target.files[0];
             const preview = document.getElementById('attachmentPreview');
             preview.innerHTML = '';
-            
+
             if (file) {
                 const isImage = file.type.startsWith('image/');
                 const isVideo = file.type.startsWith('video/');
-                
+
                 if (isImage) {
                     const reader = new FileReader();
                     reader.onload = function(event) {
@@ -857,13 +983,14 @@
             }
         });
 
+        // ================= DISPLAY ISSUES =================
         async function displayIssues() {
             const list = document.getElementById('issuesList');
             list.innerHTML = '<p style="text-align: center;">Loading...</p>';
 
             let allIssues = await loadAllIssues();
-
             let filteredIssues = allIssues;
+
             if (currentMode === 'tech') {
                 filteredIssues = allIssues.filter(i => i.assignedTo === currentUser);
             }
@@ -906,23 +1033,18 @@
                     ` : ''}
                     <div style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 12px; border-left: 4px solid #667eea;">
                         <div style="font-weight: bold; color: #667eea; font-size: 13px; margin-bottom: 0.5rem;">⏳ In Progress Reasons</div>
-                        <textarea class="solver-notes-textarea" id="reasons${issue.id}" style="min-height: 80px; margin-bottom: 0.5rem;" placeholder="e.g., Waiting for parts, Pending approval...">${issue.inProgressReasons || ''}</textarea>
+                        <textarea class="solver-notes-textarea" id="reasons${issue.id}" style="min-height: 80px; margin-bottom: 0.5rem;" placeholder="e.g., Waiting for parts...">${issue.inProgressReasons || ''}</textarea>
                         ${(currentMode === 'tech' || currentMode === 'admin') ? `
-                            <button class="btn btn-primary btn-action" style="width: 100%; padding: 8px;" onclick="saveInProgressReasons(${issue.id})">💾 Save Reasons</button>
+                            <button class="btn btn-primary btn-action" style="width: 100%; padding: 8px;" onclick="saveInProgressReasons(${issue.id})">💾 Save</button>
                         ` : `
                             <div style="font-size: 13px; color: #666; font-style: italic;">${issue.inProgressReasons ? issue.inProgressReasons : 'No reasons added yet'}</div>
                         `}
                     </div>
                     ${(currentMode === 'tech' || currentMode === 'admin') ? `
                         <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button class="btn btn-secondary btn-action" onclick="viewDescription(${issue.id})">📄 View Description</button>
-                            ${issue.status === 'Pending' ? 
-                                `<button class="btn btn-success btn-action" onclick="updateStatus(${issue.id}, 'In Progress')">🔄 Progress</button>` : ''
-                            }
-                            ${issue.status !== 'Solved' ? 
-                                `<button class="btn btn-primary btn-action" onclick="updateStatus(${issue.id}, 'Solved')">✅ Solve</button>` : 
-                                `<span class="status-badge status-solved">✅ Solved</span>`
-                            }
+                            <button class="btn btn-secondary btn-action" onclick="viewDescription(${issue.id})">📄 View</button>
+                            ${issue.status === 'Pending' ? `<button class="btn btn-success btn-action" onclick="updateStatus(${issue.id}, 'In Progress')">🔄 Progress</button>` : ''}
+                            ${issue.status !== 'Solved' ? `<button class="btn btn-primary btn-action" onclick="updateStatus(${issue.id}, 'Solved')">✅ Solve</button>` : `<span class="status-badge status-solved">✅ SOLVED</span>`}
                             <input type="number" id="days${issue.id}" min="1" max="30" placeholder="Days" style="width: 70px; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
                             <button class="btn btn-warning btn-action" onclick="updateDuration(${issue.id})">⏱️ Update</button>
                             <button class="btn btn-info btn-action" onclick="openTransferModal(${issue.id})">🔄 Transfer</button>
@@ -934,47 +1056,23 @@
             });
         }
 
+        // ================= ISSUE MANAGEMENT =================
         async function viewDescription(id) {
             const allIssues = await loadAllIssues();
             const issue = allIssues.find(i => i.id === id);
-            
+
             if (issue) {
                 document.getElementById('descriptionText').textContent = issue.issueDesc;
                 document.getElementById('descriptionDetails').innerHTML = `
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Issue ID</div>
-                        <div class="desc-detail-value">#${issue.id.toString().slice(-6)}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Location</div>
-                        <div class="desc-detail-value">${issue.placeOfIssue}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Filed By</div>
-                        <div class="desc-detail-value">${issue.filedBy}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Assigned To</div>
-                        <div class="desc-detail-value">${issue.assignedTo}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Status</div>
-                        <div class="desc-detail-value" style="color: ${issue.status === 'Solved' ? '#28a745' : issue.status === 'In Progress' ? '#007bff' : '#ffc107'}; font-weight: bold;">${issue.status}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Expected Days</div>
-                        <div class="desc-detail-value">${issue.expectedDays} days</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Issue Type</div>
-                        <div class="desc-detail-value">${issue.type.toUpperCase()}</div>
-                    </div>
-                    <div class="desc-detail-item">
-                        <div class="desc-detail-label">Created Date</div>
-                        <div class="desc-detail-value">${issue.createdDate}</div>
-                    </div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Issue ID</div><div class="desc-detail-value">#${issue.id.toString().slice(-6)}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Location</div><div class="desc-detail-value">${issue.placeOfIssue}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Filed By</div><div class="desc-detail-value">${issue.filedBy}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Assigned To</div><div class="desc-detail-value">${issue.assignedTo}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Status</div><div class="desc-detail-value" style="color: ${issue.status === 'Solved' ? '#28a745' : issue.status === 'In Progress' ? '#007bff' : '#ffc107'}; font-weight: bold;">${issue.status}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Expected Days</div><div class="desc-detail-value">${issue.expectedDays} days</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Type</div><div class="desc-detail-value">${issue.type.toUpperCase()}</div></div>
+                    <div class="desc-detail-item"><div class="desc-detail-label">Created</div><div class="desc-detail-value">${issue.createdDate}</div></div>
                 `;
-
                 document.getElementById('inProgressReasonsModal').value = issue.inProgressReasons || '';
                 window.currentViewingIssueId = id;
                 document.getElementById('descriptionModal').classList.add('active');
@@ -985,12 +1083,12 @@
             const reasons = document.getElementById(`reasons${id}`).value;
             const allIssues = await loadAllIssues();
             const issue = allIssues.find(i => i.id === id);
-            
+
             if (issue) {
                 issue.inProgressReasons = reasons;
                 issue.updatedDate = new Date().toLocaleString('en-IN');
                 await updateIssue(issue);
-                alert('✅ In Progress Reasons saved!');
+                alert('✅ Saved!');
                 displayIssues();
             }
         }
@@ -999,12 +1097,12 @@
             const reasons = document.getElementById('inProgressReasonsModal').value;
             const allIssues = await loadAllIssues();
             const issue = allIssues.find(i => i.id === window.currentViewingIssueId);
-            
+
             if (issue) {
                 issue.inProgressReasons = reasons;
                 issue.updatedDate = new Date().toLocaleString('en-IN');
                 await updateIssue(issue);
-                alert('✅ In Progress Reasons saved!');
+                alert('✅ Saved!');
                 closeDescriptionModal();
                 displayIssues();
             }
@@ -1035,7 +1133,7 @@
                 await updateIssue(issue);
                 updateStats();
                 displayIssues();
-                alert('⏱️ Duration updated!');
+                alert('⏱️ Updated!');
             }
         }
 
@@ -1054,7 +1152,7 @@
         async function confirmTransfer() {
             const transferTo = document.getElementById('transferTo').value;
             if (!transferTo) {
-                alert('Please select a technician!');
+                alert('Please select a technician');
                 return;
             }
 
@@ -1067,25 +1165,26 @@
                 updateStats();
                 displayIssues();
                 closeTransferModal();
-                alert(`✅ Issue transferred to ${transferTo}`);
+                alert(`✅ Transferred to ${transferTo}`);
             }
         }
 
         async function deleteIssueFunc(id) {
-            if (confirm('🗑️ Delete this issue?')) {
+            if (confirm('🗑️ Are you sure you want to delete this issue?')) {
                 await deleteIssue(id);
                 updateStats();
                 displayIssues();
             }
         }
 
+        // ================= STATISTICS =================
         async function updateStats() {
             const allIssues = await loadAllIssues();
             let relevantIssues = allIssues;
             if (currentMode === 'tech') {
                 relevantIssues = allIssues.filter(i => i.assignedTo === currentUser);
             }
-            
+
             const total = relevantIssues.length;
             const solved = relevantIssues.filter(i => i.status === 'Solved').length;
             const pending = relevantIssues.filter(i => i.status === 'Pending').length;
@@ -1095,25 +1194,25 @@
             document.getElementById('pendingIssues').textContent = pending;
         }
 
-        // PDF Generation functions (same as input)
+        // ================= PDF REPORTS =================
         async function generatePDF() {
             const allIssues = await loadAllIssues();
             let reportIssues = currentMode === 'admin' ? allIssues : allIssues.filter(i => i.assignedTo === currentUser);
 
             if (reportIssues.length === 0) {
-                alert('⚠️ No issues to generate report!');
+                alert('⚠️ No issues to report');
                 return;
             }
 
             try {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('l', 'mm', 'a4');
-                
+
                 pdf.setFontSize(18);
                 pdf.text(`📋 Issue Report - ${currentUser}`, 20, 20);
                 pdf.setFontSize(10);
                 pdf.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 30);
-                
+
                 const tableData = reportIssues.map(issue => [
                     `#${issue.id.toString().slice(-6)}`,
                     issue.placeOfIssue,
@@ -1137,14 +1236,14 @@
                 pdf.text('Summary', 20, pdf.lastAutoTable.finalY + 15);
                 pdf.setFontSize(10);
                 pdf.text(`Total Issues: ${reportIssues.length}`, 20, pdf.lastAutoTable.finalY + 25);
-                pdf.text(`Solved Issues: ${reportIssues.filter(i => i.status === 'Solved').length}`, 20, pdf.lastAutoTable.finalY + 35);
-                pdf.text(`Pending Issues: ${reportIssues.filter(i => i.status === 'Pending').length}`, 20, pdf.lastAutoTable.finalY + 45);
-                
-                pdf.save(`Issue_Report_${currentUser}_${new Date().getTime()}.pdf`);
-                alert('✅ PDF Report Generated Successfully!');
+                pdf.text(`Solved: ${reportIssues.filter(i => i.status === 'Solved').length}`, 20, pdf.lastAutoTable.finalY + 35);
+                pdf.text(`Pending: ${reportIssues.filter(i => i.status === 'Pending').length}`, 20, pdf.lastAutoTable.finalY + 45);
+
+                pdf.save(`Issue_Report_${currentUser}_${Date.now()}.pdf`);
+                alert('✅ PDF generated!');
             } catch (error) {
-                console.error('PDF Generation Error:', error);
-                alert('❌ Error generating PDF: ' + error.message);
+                console.error('PDF Error:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
 
@@ -1152,19 +1251,19 @@
             const allIssues = await loadAllIssues();
 
             if (allIssues.length === 0) {
-                alert('⚠️ No issues to generate report!');
+                alert('⚠️ No issues to report');
                 return;
             }
 
             try {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('l', 'mm', 'a4');
-                
+
                 pdf.setFontSize(18);
                 pdf.text('📊 Admin System Report', 20, 20);
                 pdf.setFontSize(10);
                 pdf.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 30);
-                
+
                 const tableData = allIssues.map(issue => [
                     `#${issue.id.toString().slice(-6)}`,
                     issue.placeOfIssue,
@@ -1184,7 +1283,7 @@
 
                 pdf.setFontSize(14);
                 pdf.text('Technician Performance', 20, pdf.lastAutoTable.finalY + 15);
-                
+
                 const perfData = ['Avinash', 'Ashish', 'Piyush'].map(tech => {
                     const techIssues = allIssues.filter(i => i.assignedTo === tech);
                     const solved = techIssues.filter(i => i.status === 'Solved').length;
@@ -1205,23 +1304,23 @@
                 pdf.setFontSize(11);
                 let statY = pdf.lastAutoTable.finalY + 25;
                 pdf.text(`Total Issues: ${allIssues.length}`, 20, statY);
-                pdf.text(`Solved Issues: ${allIssues.filter(i => i.status === 'Solved').length}`, 20, statY + 8);
+                pdf.text(`Solved: ${allIssues.filter(i => i.status === 'Solved').length}`, 20, statY + 8);
                 pdf.text(`In Progress: ${allIssues.filter(i => i.status === 'In Progress').length}`, 20, statY + 16);
-                pdf.text(`Pending Issues: ${allIssues.filter(i => i.status === 'Pending').length}`, 20, statY + 24);
+                pdf.text(`Pending: ${allIssues.filter(i => i.status === 'Pending').length}`, 20, statY + 24);
                 pdf.text(`Success Rate: ${allIssues.length > 0 ? Math.round((allIssues.filter(i => i.status === 'Solved').length / allIssues.length) * 100) : 0}%`, 20, statY + 32);
-                
-                pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
-                alert('✅ PDF Report Generated Successfully!');
+
+                pdf.save(`Admin_Report_${Date.now()}.pdf`);
+                alert('✅ PDF generated!');
             } catch (error) {
-                console.error('PDF Generation Error:', error);
-                alert('❌ Error generating PDF: ' + error.message);
+                console.error('PDF Error:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
 
+        // ================= KEY PRESS EVENTS =================
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') login();
         });
     </script>
-
 </body>
 </html>
