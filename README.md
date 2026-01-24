@@ -1,21 +1,47 @@
-# School Issue Tracker
+# IT-HELPDESK
 
 A fully client-side web application for tracking school computer issues, hosted on GitHub Pages with data stored in the same GitHub repository.
 
 ## Access the App
 
-Visit: https://dhruv021108.github.io/school-issue-tracker1/
+Visit: https://solodev021108.github.io/IT-HEPLDESK/
 
 ## Setup
 
 1. **GitHub Pages**:
-   - Repo: `school-issue-tracker1` (owned by `Dhruv021108`)
+   - Repo: `IT-HEPLDESK` (owned by `solodev021108`)
    - Enabled from `/docs` folder.
 
 2. **Data Storage**:
    - Issues saved as `issues.json` in the repo.
    - Configure GitHub token in the app's settings modal.
 
+## Configuration
+
+1. **Login** with admin credentials
+2. Click **⚙️ Settings** button in the dashboard header
+3. Enter your GitHub username, repository name, and Personal Access Token
+4. Click **Save & Connect** to validate and store credentials
+5. Start submitting and managing issues!
+
+## Features
+
+- ✅ **Role-Based Access**: Admin, Technician, and Guest modes
+- ✅ **Issue Tracking**: Create, update, and resolve issues
+- ✅ **GitHub Integration**: All data stored directly in your GitHub repo
+- ✅ **PDF Reports**: Generate individual and admin reports
+- ✅ **Attachments**: Support for images and video uploads
+- ✅ **Real-time Sync**: Instantly sync with GitHub repository
+- ✅ **No Backend Required**: Completely client-side application
+
 ## Usage
 
-Open the app, click "Setup Storage" on login, enter your GitHub token, and start using it!
+1. Open the app at https://solodev021108.github.io/IT-HEPLDESK/
+2. Login with your credentials or access as Guest
+3. Submit issues with descriptions, location, and expected resolution time
+4. Technicians can update status, add notes, and transfer issues
+5. Admin can view comprehensive reports and manage all issues
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>🚀 School Computer Issue System</title> <style> * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #2d1b69 50%, #1a0f3a 100%); min-height: 100vh; color: #333; } .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; } .login-page { background: rgba(255,255,255,0.95); padding: 3rem; border-radius: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; max-width: 600px; width: 100%; } .login-page h1 { font-size: 2.5rem; background: linear-gradient(45deg, #667eea, #764ba2); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; } .login-page p { color: #666; margin-bottom: 2rem; font-size: 16px; } .form-group { margin-bottom: 1.5rem; text-align: left; } label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #444; } input, select { width: 100%; padding: 14px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 16px; transition: all 0.3s; background: white; } input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); } .login-buttons { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; } .btn { padding: 14px 28px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; flex: 1; min-width: 150px; } .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; } .btn-success { background: linear-gradient(45deg, #28a745, #20c997); color: white; } .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); } .dashboard { display: none; } .dashboard.active { display: block; } .container { max-width: 1200px; margin: 0 auto; padding: 20px; } .header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 2rem; border-radius: 20px; text-align: center; margin-bottom: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; } .header h1 { font-size: 2.5rem; margin-bottom: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); } .logout-btn { background: rgba(255,255,255,0.3); color: white; padding: 10px 20px; border: 2px solid white; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s; } .logout-btn:hover { background: white; color: #667eea; } .main-content { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; } .left-panel { background: rgba(255,255,255,0.95); padding: 2rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); } .right-panel { background: rgba(255,255,255,0.95); padding: 2rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); height: fit-content; } .tab-buttons { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; } .tab-btn { padding: 12px 24px; border: none; border-radius: 50px; background: #e9ecef; cursor: pointer; transition: all 0.3s; font-weight: bold; } .tab-btn.active { background: linear-gradient(45deg, #667eea, #764ba2); color: white; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.4); } .tab-content { display: none; } .tab-content.active { display: block; } textarea { width: 100%; padding: 14px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 16px; font-family: 'Segoe UI', sans-serif; transition: all 0.3s; } textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); } .issue-card { background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-left: 5px solid #667eea; transition: all 0.3s; } .issue-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); } .issue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; } .issue-id { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 16px; border-radius: 25px; font-size: 14px; font-weight: bold; } .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; } .status-pending { background: #fff3cd; color: #856404; } .status-progress { background: #cce5ff; color: #004085; } .status-solved { background: #d4edda; color: #155724; } .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; } .stat-card { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 1.5rem; border-radius: 15px; text-align: center; } .stat-number { font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; } .hidden { display: none !important; } .quick-access-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; } .quick-btn { padding: 20px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s; } .quick-btn:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(102,126,234,0.3); } .btn-action { padding: 10px 15px; font-size: 14px; width: auto; margin-right: 0.5rem; margin-bottom: 0.5rem; } .btn-danger { background: linear-gradient(45deg, #dc3545, #c82333); color: white; } .btn-warning { background: linear-gradient(45deg, #ffc107, #fd7e14); color: white; } .btn-info { background: linear-gradient(45deg, #17a2b8, #138496); color: white; } .btn-secondary { background: linear-gradient(45deg, #6c757d, #5a6268); color: white; } .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; } .modal.active { display: flex; align-items: center; justify-content: center; } .modal-content { background-color: white; padding: 2rem; border-radius: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; } .desc-modal-content { background-color: white; padding: 2rem; border-radius: 20px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; } .desc-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; } .desc-box { background: #f5f5f5; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #667eea; font-size: 15px; line-height: 1.6; color: #333; margin-bottom: 1.5rem; } .desc-details { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; } .desc-detail-item { background: #f9f9f9; padding: 1rem; border-radius: 8px; border: 1px solid #e9ecef; } .desc-detail-label { font-weight: bold; color: #667eea; font-size: 12px; text-transform: uppercase; margin-bottom: 0.5rem; } .desc-detail-value { color: #333; font-size: 14px; } .solver-notes-section { margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e9ecef; } .solver-notes-textarea { width: 100%; padding: 1rem; border: 2px solid #e9ecef; border-radius: 12px; font-family: 'Segoe UI', sans-serif; font-size: 14px; resize: vertical; transition: all 0.3s; } .solver-notes-textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); } @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } .header { flex-direction: column; gap: 1rem; } .header h1 { font-size: 2rem; } .login-page { padding: 2rem; } .login-page h1 { font-size: 2rem; } .desc-details { grid-template-columns: 1fr; } } </style> </head> <body> <!-- Login Page --> <div id="loginSection" class="login-container"> <div class="login-page"> <h1>🖥️ School Computer Issue System</h1> <p>Professional IT Issue Management Platform</p>
+
+plaintext: 905 lines selected
+</body> </html>in this it save the data to github but not share it via internet
