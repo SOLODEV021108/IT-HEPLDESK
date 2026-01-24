@@ -611,81 +611,45 @@
         const GITHUB_REPO = 'IT-HEPLDESK';
 
         // ================= GITHUB API FUNCTIONS =================
-        async function getIssues() {
-            // Use hardcoded owner/repo for public reading
-            const owner = 'SOLODEV021108';
-            const repo = 'IT-HEPLDESK';
-            const branch = 'main';
+        // API_URL will be set based on environment (local or deployed)
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api/issues'
+            : 'https://school-issue-api.vercel.app/api/issues';
 
-            // Try public raw URL first (no auth needed)
-            const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/issues.json`;
+        async function getIssues() {
             try {
-                const response = await fetch(rawUrl, {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
                     cache: "no-store"
                 });
 
-                if (response.status === 404) {
-                    console.log('issues.json does not exist yet');
-                    return [];
-                }
-                
                 if (!response.ok) {
-                    console.error('GitHub URL Error:', response.status);
+                    console.error('API Error:', response.status);
                     return [];
                 }
 
                 const content = await response.json();
                 return content;
             } catch (error) {
-                console.error('Error fetching issues from public URL:', error);
+                console.error('Error fetching issues:', error);
                 return [];
             }
         }
 
         async function saveToGithub(issues) {
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
-            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
-
-            // Get current SHA for updating
-            let sha = null;
             try {
-                const getResponse = await fetch(url, {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                if (getResponse.ok) {
-                    const data = await getResponse.json();
-                    sha = data.sha;
-                }
-            } catch (e) {
-                console.log('File does not exist yet, will create new');
-            }
-
-            const body = {
-                message: `Updated issues - ${new Date().toLocaleString('en-IN')}`,
-                content: content
-            };
-
-            if (sha) {
-                body.sha = sha;
-            }
-
-            try {
-                const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ issues })
                 });
 
                 if (!response.ok) {
                     const error = await response.json();
-                    console.error('GitHub Save Error:', error);
-                    throw new Error(error.message || 'Failed to save to GitHub');
+                    console.error('API Save Error:', error);
+                    throw new Error(error.error || 'Failed to save to GitHub');
                 }
 
                 return true;
