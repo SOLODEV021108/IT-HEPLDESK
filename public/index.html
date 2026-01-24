@@ -605,10 +605,10 @@
         let currentSha = null;
         let transferringIssueId = null;
 
-        // GitHub Configuration (from localStorage)
-        let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
-        let GITHUB_OWNER = localStorage.getItem('gh_owner') || '';
-        let GITHUB_REPO = localStorage.getItem('gh_repo') || '';
+        // GitHub Configuration - Hardcoded for automatic saving
+        const GITHUB_TOKEN = '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';
+        const GITHUB_OWNER = 'SOLODEV021108';
+        const GITHUB_REPO = 'IT-HEPLDESK';
 
         // ================= GITHUB API FUNCTIONS =================
         async function getIssues() {
@@ -643,16 +643,7 @@
         }
 
         async function saveToGithub(issues) {
-            // Use hardcoded values and token from localStorage
-            const owner = 'SOLODEV021108';
-            const repo = 'IT-HEPLDESK';
-            const token = localStorage.getItem('gh_token');
-            
-            if (!token) {
-                throw new Error('GitHub token not configured. Admin must set it in settings.');
-            }
-
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/issues.json`;
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
             const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
 
             // Get current SHA for updating
@@ -660,7 +651,7 @@
             try {
                 const getResponse = await fetch(url, {
                     headers: {
-                        'Authorization': `token ${token}`,
+                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 });
@@ -685,7 +676,7 @@
                 const response = await fetch(url, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${token}`,
+                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(body)
@@ -888,12 +879,6 @@
         // ================= FORM SUBMISSION =================
         document.getElementById('issueForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            const token = localStorage.getItem('gh_token');
-            if (!token) {
-                alert('⚠️ GitHub token not configured!\n\nPlease ask the admin to:\n1. Click ⚙️ Settings\n2. Enter GitHub Personal Access Token\n3. Click Save & Connect');
-                return;
-            }
 
             const formTitle = document.getElementById('formTitle').textContent.toLowerCase();
             let type = 'normal';
