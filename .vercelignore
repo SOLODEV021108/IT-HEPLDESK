@@ -1,0 +1,7 @@
+docs
+public
+.git
+.gitignore
+README.md
+issues.json
+package-lock.json
