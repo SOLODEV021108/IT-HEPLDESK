@@ -605,10 +605,11 @@
         let currentSha = null;
         let transferringIssueId = null;
 
-        // GitHub Configuration - Hardcoded for automatic saving
-        const GITHUB_TOKEN = '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';
-        const GITHUB_OWNER = 'SOLODEV021108';
-        const GITHUB_REPO = 'IT-HEPLDESK';
+        // GitHub Configuration - do NOT store PATs in client code.
+        // The backend (Vercel) should hold `GITHUB_TOKEN` as an env var.
+        let GITHUB_TOKEN = '';
+        let GITHUB_OWNER = '';
+        let GITHUB_REPO = '';
 
         // ================= GITHUB API FUNCTIONS =================
         // API_URL will be set based on environment (local or deployed)
