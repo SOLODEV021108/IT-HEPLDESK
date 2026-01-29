@@ -605,41 +605,31 @@
         let currentSha = null;
         let transferringIssueId = null;
 
-        // GitHub Configuration (from localStorage)
-        let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
-        let GITHUB_OWNER = localStorage.getItem('gh_owner') || '';
-        let GITHUB_REPO = localStorage.getItem('gh_repo') || '';
+        // GitHub Configuration - do NOT store PATs in client code.
+        // The backend (Vercel) should hold `GITHUB_TOKEN` as an env var.
+        let GITHUB_TOKEN = '';
+        let GITHUB_OWNER = '';
+        let GITHUB_REPO = '';
 
         // ================= GITHUB API FUNCTIONS =================
-        async function getIssues() {
-            if (!GITHUB_TOKEN) {
-                console.warn('No GitHub token configured');
-                return [];
-            }
+        // API_URL will be set based on environment (local or deployed)
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api/issues'
+            : 'https://it-git-main-dhruv021108s-projects.vercel.app/api/issues';
 
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+        async function getIssues() {
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
+                const response = await fetch(API_URL, {
+                    method: 'GET',
                     cache: "no-store"
                 });
 
-                if (response.status === 404) {
-                    console.log('issues.json does not exist yet');
+                if (!response.ok) {
+                    console.error('API Error:', response.status);
                     return [];
                 }
-                
-                if (!response.ok) {
-                    console.error('GitHub API Error:', response.status, response.statusText);
-                    throw new Error(`GitHub API Error: ${response.status}`);
-                }
 
-                const data = await response.json();
-                currentSha = data.sha;
-                const content = JSON.parse(decodeURIComponent(escape(window.atob(data.content))));
+                const content = await response.json();
                 return content;
             } catch (error) {
                 console.error('Error fetching issues:', error);
@@ -648,40 +638,21 @@
         }
 
         async function saveToGithub(issues) {
-            if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
-                throw new Error('GitHub credentials not configured');
-            }
-
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
-            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
-
-            const body = {
-                message: `Updated issues - ${new Date().toLocaleString('en-IN')}`,
-                content: content
-            };
-
-            if (currentSha) {
-                body.sha = currentSha;
-            }
-
             try {
-                const response = await fetch(url, {
-                    method: 'PUT',
+                const response = await fetch(API_URL, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ issues })
                 });
 
                 if (!response.ok) {
                     const error = await response.json();
-                    console.error('GitHub Save Error:', error);
-                    throw new Error(error.message || 'Failed to save to GitHub');
+                    console.error('API Save Error:', error);
+                    throw new Error(error.error || 'Failed to save to GitHub');
                 }
 
-                const data = await response.json();
-                currentSha = data.content.sha;
                 return true;
             } catch (error) {
                 console.error('Error saving to GitHub:', error);
@@ -831,6 +802,14 @@
                 document.getElementById('myReportBtn').style.display = 'block';
                 document.getElementById('adminReportBtn').style.display = 'block';
                 document.getElementById('settingsBtn').style.display = 'inline-block';
+                
+                // Force GitHub setup on first use
+                if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+                    setTimeout(() => {
+                        alert('⚠️ IMPORTANT: GitHub is not configured!\n\nThe admin must configure GitHub credentials first so all users can see the same issues from any device.\n\nClick Settings to configure.');
+                        openSettings();
+                    }, 500);
+                }
             } else {
                 greeting = `👨‍💻 Technician - ${currentUser}`;
                 document.getElementById('reportsSection').style.display = 'block';
@@ -865,11 +844,6 @@
         // ================= FORM SUBMISSION =================
         document.getElementById('issueForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            if (!GITHUB_TOKEN) {
-                alert('⚠️ Settings not configured. Please ask admin to configure GitHub.');
-                return;
-            }
 
             const formTitle = document.getElementById('formTitle').textContent.toLowerCase();
             let type = 'normal';
