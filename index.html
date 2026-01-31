@@ -605,24 +605,27 @@
         let currentSha = null;
         let transferringIssueId = null;
 
-        // GitHub Configuration - do NOT store PATs in client code.
-        // The backend (Vercel) should hold `GITHUB_TOKEN` as an env var.
-        let GITHUB_TOKEN = '';
-        let GITHUB_OWNER = '';
-        let GITHUB_REPO = '';
+        // ================= GITHUB CONFIGURATION =================
+        // ⚠️ REPLACE THESE WITH YOUR DETAILS
+        // Note: Hardcoding the token exposes it to anyone who views the source code.
+        let GITHUB_TOKEN = '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'; // Paste your token starting with ghp_...
+        let GITHUB_OWNER = 'SOLODEV021108'; // e.g., solodev021108
+        let GITHUB_REPO = 'IT-HEPLDESK';        // e.g., IT-HEPLDESK
 
         // ================= GITHUB API FUNCTIONS =================
-        // API_URL will be set based on environment (local or deployed)
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/issues'
-            : 'https://it-git-main-dhruv021108s-projects.vercel.app/api/issues';
-
         async function getIssues() {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'GET',
+                // Direct GitHub API call
+                const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
                     cache: "no-store"
                 });
+
+                if (response.status === 404) return []; // File doesn't exist yet
 
                 if (!response.ok) {
                     console.error('API Error:', response.status);
@@ -630,7 +633,11 @@
                 }
 
                 const content = await response.json();
-                return content;
+                currentSha = content.sha; // Save SHA for updates
+                
+                // Decode Base64 content
+                const decodedContent = decodeURIComponent(escape(atob(content.content)));
+                return JSON.parse(decodedContent);
             } catch (error) {
                 console.error('Error fetching issues:', error);
                 return [];
@@ -639,12 +646,27 @@
 
         async function saveToGithub(issues) {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
+                const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/issues.json`;
+                
+                // Encode content to Base64
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(issues, null, 2))));
+
+                const body = {
+                    message: "Update issues via Web App",
+                    content: content
+                };
+
+                if (currentSha) {
+                    body.sha = currentSha;
+                }
+
+                const response = await fetch(url, {
+                    method: 'PUT',
                     headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ issues })
+                    body: JSON.stringify(body)
                 });
 
                 if (!response.ok) {
@@ -653,6 +675,8 @@
                     throw new Error(error.error || 'Failed to save to GitHub');
                 }
 
+                const data = await response.json();
+                currentSha = data.content.sha; // Update SHA
                 return true;
             } catch (error) {
                 console.error('Error saving to GitHub:', error);
@@ -802,14 +826,6 @@
                 document.getElementById('myReportBtn').style.display = 'block';
                 document.getElementById('adminReportBtn').style.display = 'block';
                 document.getElementById('settingsBtn').style.display = 'inline-block';
-                
-                // Force GitHub setup on first use
-                if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
-                    setTimeout(() => {
-                        alert('⚠️ IMPORTANT: GitHub is not configured!\n\nThe admin must configure GitHub credentials first so all users can see the same issues from any device.\n\nClick Settings to configure.');
-                        openSettings();
-                    }, 500);
-                }
             } else {
                 greeting = `👨‍💻 Technician - ${currentUser}`;
                 document.getElementById('reportsSection').style.display = 'block';
