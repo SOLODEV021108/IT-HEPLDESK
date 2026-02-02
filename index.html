@@ -997,10 +997,10 @@
             };
 
             if (attachmentFile) {
-                // Check file size (limit to 50MB for safety)
-                const maxSize = 50 * 1024 * 1024; // 50MB
+                // Check file size (limit to 100MB for safety)
+                const maxSize = 100 * 1024 * 1024; // 100MB
                 if (attachmentFile.size > maxSize) {
-                    alert('❌ File size exceeds 50MB limit. Please select a smaller file.');
+                    alert('❌ File size exceeds 100MB limit. Please select a smaller file.');
                     return;
                 }
 
